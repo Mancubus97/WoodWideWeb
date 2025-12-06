@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static Unity.VisualScripting.Metadata;
 
 namespace WoodWideWeb
@@ -27,9 +28,21 @@ namespace WoodWideWeb
 
     public class FungalNetwork : MonoBehaviour
     {
-        List<FungalNode> network = new List<FungalNode>();
-        float nutrientsStock = 0f;
-        void CreateFirstNode()
+        public List<FungalNode> network = new List<FungalNode>();
+        public float nutrientsStock = 0f;
+        public static FungalNetwork Instance { get; private set; }
+
+        void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+        }
+            void CreateFirstNode()
         {
             Soil soil = FindFirstObjectByType<Soil>();
             BoxCollider col = soil.GetComponent<BoxCollider>();
@@ -109,7 +122,7 @@ namespace WoodWideWeb
 
             if (nextCell == null)
             {
-                Debug.Log("No better soil cell found!");
+                Debug.Log("Returned Null Cell!");
                 return;
             }
 
@@ -122,7 +135,6 @@ namespace WoodWideWeb
 
             network.Add(new FungalNode(newPos, last));
             //Debug.Log("Grew node at: " + network[network.Count - 1].position.ToString() + "total nodes: " + network.Count);
-            Debug.Log("Nutrient stock: " + nutrientsStock.ToString());
         }
 
         float elapsedTime = 0f;

@@ -88,11 +88,11 @@ namespace WoodWideWeb
                                 (x + 0.5f) * cellSize.x,
                                 (y + 0.5f) * cellSize.y,
                                 (z + 0.5f) * cellSize.z
-                            );
+                                );
+
                             if (x - randomx > -randomSize && x - randomx < randomSize && y - randomy > -randomSize && y - randomy < randomSize && z - randomz > -randomSize && z - randomz < randomSize)
                             {
                                 grid[x, y, z] = new SoilCell(cellPos, true, nutrients);
-                                //Debug.Log("Hotspot Cell at: " + cellPos);
                             }
                             else
                             {
@@ -104,16 +104,39 @@ namespace WoodWideWeb
                                 else if (nutrients > grid[x, y, z].nutrients)
                                     grid[x, y, z] = new SoilCell(cellPos, false, nutrients);
                             }
+
+
+
+
                         }
             }
+            
+            // Handle a clean natural random soil
+            if (HighNutrientBlocks == 0)
+            {
+                Debug.Log("making empty soil..");
+                for (int x = 0; x < xGrid; x++)
+                    for (int y = 0; y < yGrid; y++)
+                        for (int z = 0; z < zGrid; z++)
+                        {
+                            Vector3 cellPos = origin + new Vector3(
+                                (x + 0.5f) * cellSize.x,
+                                (y + 0.5f) * cellSize.y,
+                                (z + 0.5f) * cellSize.z
+                                );
+                            distance = Vector3.Distance(col.center, new Vector3(Random.Range(0, col.size.x), Random.Range(0, col.size.y), Random.Range(0, col.size.z)));
+                            nutrients = base_nutrients * Mathf.Exp(-falloff * distance);
 
+                            grid[x, y, z] = new SoilCell(cellPos, false, nutrients);
+                        }
 
-
+            }
+           
         }
 
         void OnValidate()
         {
-            FillGrid(3);
+            FillGrid(0);
         }
         void Start()
         {
@@ -121,7 +144,6 @@ namespace WoodWideWeb
             //if (rend != null)
             //    rend.enabled = false;
 
-            //FillGrid();
 
             Debug.Log("Soil initialized!");
         }
@@ -201,8 +223,8 @@ namespace WoodWideWeb
                 }
                 //else
                 //{
-                //    Gizmos.color = new Color(0f, 1f, 0f, cell.nutrients-0.8f);
-                //    Gizmos.DrawSphere(cell.position, 1f);
+                //    Gizmos.color = new Color(0f, 1f, 0f, cell.nutrients - 0.8f);
+                //    Gizmos.DrawSphere(cell.position, 0.5f);
                 //}
 
             }
