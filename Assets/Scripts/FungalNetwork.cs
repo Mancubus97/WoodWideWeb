@@ -74,21 +74,27 @@ namespace WoodWideWeb
                 index = Random.Range(0, 6);
                 counter++;
             }
-            if (counter <= 20)
+            if (counter <= 20) // found a better cell
                 nextCell = candidate_cells[index];
-            
 
-            if (nextCell == null) // pick a random direction
-            {
-                nextCell = candidate_cells[Random.Range(0, 6)];
-            }
+            // METHOD1
+            //if (nextCell == null)
+            //{
+            //    nextCell = candidate_cells[Random.Range(0, 6)];
+            //}
 
-            if (current.parent != null)// Dont need to check for first node
+            //if (current.parent != null)// Dont need to check for first node
+            //{
+            //    while (nextCell != null && nextCell == current.parent.occupied_cell) // find a random direction that is not the parent
+            //    {
+            //        nextCell = candidate_cells[Random.Range(0, 6)];
+            //    }
+            //}
+
+            // METHOD2
+            if (nextCell == null)
             {
-                while (nextCell != null && nextCell == current.parent.occupied_cell) // find a random direction that is not the parent
-                {
-                    nextCell = candidate_cells[Random.Range(0, 6)];
-                }
+                nextCell = current.parent != null ? current.parent.occupied_cell : null;
             }
 
             return nextCell;
@@ -119,12 +125,22 @@ namespace WoodWideWeb
             Debug.Log("Nutrient stock: " + nutrientsStock.ToString());
         }
 
+        float elapsedTime = 0f;
+
         void Update()
         {
+            elapsedTime += Time.deltaTime;
             if (!isGrowing)
             {
                 StartCoroutine(GrowLoop());
             }
+
+            //if (elapsedTime > 60f)
+            //{
+            //    Debug.Log("Total nutrients collected: " + nutrientsStock + " in " + elapsedTime);
+            //    //stop game 
+            //    UnityEditor.EditorApplication.isPlaying = false;
+            //}
         }
 
         bool isGrowing = false;
@@ -136,7 +152,7 @@ namespace WoodWideWeb
             while (true)   // grow forever
             {
                 GrowNode();
-                yield return new WaitForSeconds(0.0005f);
+                yield return new WaitForSeconds(0.0001f);
             }
         }
 

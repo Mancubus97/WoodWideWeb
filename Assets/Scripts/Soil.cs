@@ -39,10 +39,12 @@ namespace WoodWideWeb
 
         public Vector3 cellSize;
 
+        Vector3 size;
+
         void FillGrid(int HighNutrientBlocks)
         {
             BoxCollider col = GetComponent<BoxCollider>();
-            Vector3 size = col.size;
+            size = col.size;
 
             cellSize = new Vector3(
                 size.x / xGrid,
