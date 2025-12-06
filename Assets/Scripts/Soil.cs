@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,9 +11,15 @@ namespace WoodWideWeb
         public float water;
         public Vector3 position;
 
-        public SoilCell(Vector3 position)
+        public SoilCell(Vector3 position, bool hotspot, float nutrients)
         {
-            nutrients = Random.Range(0.3f, 1.0f);
+            if (hotspot)
+            {
+                this.nutrients = Random.Range(5.0f, 10.0f);
+            }
+            else
+                this.nutrients = nutrients;
+
             water = Random.Range(0.2f, 0.8f);
             this.position = position;
         }
@@ -22,15 +29,17 @@ namespace WoodWideWeb
     {
         private Renderer rend;
 
-        public static int xGrid = 50;
-        public static int yGrid = 25;
-        public static int zGrid = 50;
+        static float falloff = 0.002f;
+
+        static int xGrid = 50;
+        static int yGrid = 25;
+        static int zGrid = 50;
 
         static SoilCell[,,] grid;
 
         public Vector3 cellSize;
 
-        void FillGrid()
+        void FillGrid(int HighNutrientBlocks)
         {
             BoxCollider col = GetComponent<BoxCollider>();
             Vector3 size = col.size;
@@ -45,22 +54,64 @@ namespace WoodWideWeb
 
             Vector3 origin = transform.position - size * 0.5f; // bottom-left-back corner
 
-            for (int x = 0; x < xGrid; x++)
-                for (int y = 0; y < yGrid; y++)
-                    for (int z = 0; z < zGrid; z++)
-                    {
-                        Vector3 cellPos = origin + new Vector3(
-                            (x + 0.5f) * cellSize.x,
-                            (y + 0.5f) * cellSize.y,
-                            (z + 0.5f) * cellSize.z
-                        );
-                        grid[x, y, z] = new SoilCell(cellPos);
-                    }
+            int randomx = Random.Range(0, xGrid);
+            int randomSize = Random.Range(12, 16);
+            int randomy = Random.Range(0, yGrid);
+            int randomz = Random.Range(0, zGrid);
+
+
+            Vector3 hotspotPos;
+            float nutrients = 0f;
+            float base_nutrients = 3f;
+            float distance;
+
+            for (int i = 0; i < HighNutrientBlocks; i++)
+            {
+                randomx = Random.Range(0, xGrid);
+                randomSize = Random.Range(6, 10);
+                randomy = Random.Range(0, yGrid);
+                randomz = Random.Range(0, zGrid);
+
+                hotspotPos = origin + new Vector3(
+                    (randomx + 0.5f) * cellSize.x,
+                    (randomy + 0.5f) * cellSize.y,
+                    (randomz + 0.5f) * cellSize.z
+                );
+
+                for (int x = 0; x < xGrid; x++)
+                    for (int y = 0; y < yGrid; y++)
+                        for (int z = 0; z < zGrid; z++)
+                        {
+                            Vector3 cellPos = origin + new Vector3(
+                                (x + 0.5f) * cellSize.x,
+                                (y + 0.5f) * cellSize.y,
+                                (z + 0.5f) * cellSize.z
+                            );
+                            if (x - randomx > -randomSize && x - randomx < randomSize && y - randomy > -randomSize && y - randomy < randomSize && z - randomz > -randomSize && z - randomz < randomSize)
+                            {
+                                grid[x, y, z] = new SoilCell(cellPos, true, nutrients);
+                                //Debug.Log("Hotspot Cell at: " + cellPos);
+                            }
+                            else
+                            {
+                                distance = Vector3.Distance(cellPos, hotspotPos);
+                                nutrients = base_nutrients * Mathf.Exp(-falloff * distance);
+                                //Debug.Log("Distance: " + distance + " Nutrients: " + nutrients);
+                                if (grid[x, y, z] == null)
+                                    grid[x, y, z] = new SoilCell(cellPos, false, nutrients);
+                                else if (nutrients > grid[x, y, z].nutrients)
+                                    grid[x, y, z] = new SoilCell(cellPos, false, nutrients);
+                            }
+                        }
+            }
+
+
+
         }
 
         void OnValidate()
         {
-            FillGrid();
+            FillGrid(3);
         }
         void Start()
         {
@@ -68,24 +119,19 @@ namespace WoodWideWeb
             //if (rend != null)
             //    rend.enabled = false;
 
-            FillGrid();
+            //FillGrid();
 
             Debug.Log("Soil initialized!");
         }
 
-        void OnDrawGizmos()
+        void DrawBundles()
         {
             BoxCollider col = GetComponent<BoxCollider>();
             if (col == null || grid == null)
                 return;
 
-            // --- Draw collider outline ---
-            Gizmos.color = Color.yellow;
-            Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.DrawWireCube(col.center, col.size);
-
             // --- Bundle visualization ---
-            Gizmos.color = Color.gray;
+            Gizmos.color = Color.lightGray;
 
             Vector3 size = col.size;
             Vector3 origin = col.center - size * 0.5f; // local origin (bottom-left-back)
@@ -132,9 +178,31 @@ namespace WoodWideWeb
                             bz * cellSize.z
                         );
 
+                        Gizmos.color = Color.gray;
                         Gizmos.DrawWireCube(worldCenter, worldSize);
                     }
                 }
+            }
+        }
+        void OnDrawGizmos()
+        {
+            DrawBundles();
+
+            //draw high nutrient cells
+            foreach (SoilCell cell in grid)
+            {
+                if (cell == null) continue;
+                if (cell.nutrients > 5f)
+                {
+                    Gizmos.color = Color.blue;
+                    Gizmos.DrawSphere(cell.position, 1f);
+                }
+                //else
+                //{
+                //    Gizmos.color = new Color(0f, 1f, 0f, cell.nutrients-0.8f);
+                //    Gizmos.DrawSphere(cell.position, 1f);
+                //}
+
             }
         }
 

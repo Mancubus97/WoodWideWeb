@@ -28,6 +28,7 @@ namespace WoodWideWeb
     public class FungalNetwork : MonoBehaviour
     {
         List<FungalNode> network = new List<FungalNode>();
+        float nutrientsStock = 0f;
         void CreateFirstNode()
         {
             Soil soil = FindFirstObjectByType<Soil>();
@@ -110,9 +111,12 @@ namespace WoodWideWeb
 
             Vector3 newPos = nextCell.position;//last.position + new Vector3(0, -soil.cellSize.y, 0);
 
-            network.Add(new FungalNode(newPos, last));
+            nutrientsStock += nextCell.nutrients * 0.9f; // absorb some nutrients
+            nextCell.nutrients *= 0.1f; 
 
+            network.Add(new FungalNode(newPos, last));
             //Debug.Log("Grew node at: " + network[network.Count - 1].position.ToString() + "total nodes: " + network.Count);
+            Debug.Log("Nutrient stock: " + nutrientsStock.ToString());
         }
 
         void Update()
@@ -132,18 +136,18 @@ namespace WoodWideWeb
             while (true)   // grow forever
             {
                 GrowNode();
-                yield return new WaitForSeconds(0.03f);
+                yield return new WaitForSeconds(0.0005f);
             }
         }
 
 
         void OnDrawGizmos()
         {
-            Gizmos.color = Color.red;
             if (network[0] != null)
             {
                 for (int i = 0; i < network.Count - 1; i++)
                 {
+                    Gizmos.color = new Color(1f, 0f , 0f, i / (float)network.Count);
                     Gizmos.DrawLine(network[i].position, network[i + 1] != null ? network[i + 1].position : transform.position);
                 }
             }
@@ -151,7 +155,6 @@ namespace WoodWideWeb
             {
                 Gizmos.DrawSphere(transform.position, 10);
             }
-
         }
     }
 
