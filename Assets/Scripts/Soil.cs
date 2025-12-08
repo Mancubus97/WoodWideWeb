@@ -136,7 +136,7 @@ namespace WoodWideWeb
 
         void OnValidate()
         {
-            FillGrid(2);
+            FillGrid(3);
         }
         void Start()
         {

@@ -133,17 +133,17 @@ namespace WoodWideWeb
 
             Vector3 newPos = nextCell.position;//last.position + new Vector3(0, -soil.cellSize.y, 0);
 
-            nutrientsStock += nextCell.nutrients * 0.9f; // absorb some nutrients
-            nextCell.nutrients *= 0.1f;
 
-            if (Random.Range(0, 100) == 0) //Soil.GetSoilCell(newPos).nutrients > 5f && 
+            if (nextCell.nutrients > 5f && Random.Range(0, 25) == 0) //
             {
                 Quaternion rot = Random.rotation;
-                FungalBranch branch = Instantiate(branchPrefab, last.position, rot);
+                FungalBranch branch = Instantiate(branchPrefab, nextCell.position, rot);
                 branches.Add(branch);
             }
-                
-            
+
+            nutrientsStock += nextCell.nutrients * 0.9f; // absorb some nutrients
+            nextCell.nutrients *= 0.1f;
+ 
             nodes.Add(new FungalNode(newPos, last));
         }
 
@@ -184,7 +184,9 @@ namespace WoodWideWeb
         {
             if (nodes.Count != 0 && nodes[0] != null)
             {
-                for (int i = 0; i < nodes.Count - 1; i++)
+                int start = Mathf.Max(0, nodes.Count - 300);
+
+                for (int i = start; i < nodes.Count - 1; i++)
                 {
                     Gizmos.color = new Color(1f, 1f , 1f, i / (float)nodes.Count);
                     Gizmos.DrawLine(nodes[i].position, nodes[i + 1] != null ? nodes[i + 1].position : transform.position);
