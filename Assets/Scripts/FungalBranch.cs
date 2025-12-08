@@ -7,6 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static Unity.VisualScripting.Metadata;
+using static UnityEditor.FilePathAttribute;
 
 namespace WoodWideWeb
 {
@@ -16,7 +17,6 @@ namespace WoodWideWeb
         public SoilCell occupied_cell = null;
         public Vector3 position = Vector3.zero;
         public FungalNode parent = null; //if this stays null, it's the first node
-        //public List<FungalNode> children = new List<FungalNode>();
 
         public FungalNode(Vector3 pos, FungalNode parent)
         {
@@ -26,22 +26,25 @@ namespace WoodWideWeb
         }
     }
 
-    public class FungalNetwork : MonoBehaviour
+    public class FungalBranch : MonoBehaviour
     {
-        public List<FungalNode> network = new List<FungalNode>();
+        public FungalBranch branchPrefab;
+
+        public List<FungalNode> nodes = new List<FungalNode>();
+        public List<FungalBranch> branches = new List<FungalBranch>();
         public float nutrientsStock = 0f;
-        public static FungalNetwork Instance { get; private set; }
+        //public static FungalBranch Instance { get; private set; }
 
-        void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+        //void Awake()
+        //{
+        //    if (Instance != null && Instance != this)
+        //    {
+        //        Destroy(gameObject);
+        //        return;
+        //    }
 
-            Instance = this;
-        }
+        //    Instance = this;
+        //}
             void CreateFirstNode()
         {
             Soil soil = FindFirstObjectByType<Soil>();
@@ -49,18 +52,18 @@ namespace WoodWideWeb
 
             Vector3 center = col.transform.position;
 
-            FungalNode firstNode = new FungalNode(new Vector3(col.transform.position.x, col.transform.position.y, col.transform.position.z), null);
-            network.Add(firstNode);
+            FungalNode firstNode = new FungalNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null);
+            nodes.Add(firstNode);
         }
 
         void OnValidate()
         {
-            if (network.Count == 0)
-                CreateFirstNode();
+
         }
         void Start()
         {
-
+            if (nodes.Count == 0)
+                CreateFirstNode();
         }
 
         SoilCell DetermineNextCell(FungalNode current)
@@ -116,7 +119,7 @@ namespace WoodWideWeb
         public void GrowNode()
         {
             // last node
-            FungalNode last = network[network.Count - 1];
+            FungalNode last = nodes[nodes.Count - 1];
 
             SoilCell nextCell = DetermineNextCell(last);
 
@@ -131,10 +134,17 @@ namespace WoodWideWeb
             Vector3 newPos = nextCell.position;//last.position + new Vector3(0, -soil.cellSize.y, 0);
 
             nutrientsStock += nextCell.nutrients * 0.9f; // absorb some nutrients
-            nextCell.nutrients *= 0.1f; 
+            nextCell.nutrients *= 0.1f;
 
-            network.Add(new FungalNode(newPos, last));
-            //Debug.Log("Grew node at: " + network[network.Count - 1].position.ToString() + "total nodes: " + network.Count);
+            if (Random.Range(0, 100) == 0) //Soil.GetSoilCell(newPos).nutrients > 5f && 
+            {
+                Quaternion rot = Random.rotation;
+                FungalBranch branch = Instantiate(branchPrefab, last.position, rot);
+                branches.Add(branch);
+            }
+                
+            
+            nodes.Add(new FungalNode(newPos, last));
         }
 
         float elapsedTime = 0f;
@@ -164,19 +174,20 @@ namespace WoodWideWeb
             while (true)   // grow forever
             {
                 GrowNode();
-                yield return new WaitForSeconds(0.0001f);
+                //yield return new WaitForSeconds(0.0001f);
+                yield return new WaitForSeconds(0.1f);
             }
         }
 
 
         void OnDrawGizmos()
         {
-            if (network[0] != null)
+            if (nodes.Count != 0 && nodes[0] != null)
             {
-                for (int i = 0; i < network.Count - 1; i++)
+                for (int i = 0; i < nodes.Count - 1; i++)
                 {
-                    Gizmos.color = new Color(1f, 0f , 0f, i / (float)network.Count);
-                    Gizmos.DrawLine(network[i].position, network[i + 1] != null ? network[i + 1].position : transform.position);
+                    Gizmos.color = new Color(1f, 1f , 1f, i / (float)nodes.Count);
+                    Gizmos.DrawLine(nodes[i].position, nodes[i + 1] != null ? nodes[i + 1].position : transform.position);
                 }
             }
             else

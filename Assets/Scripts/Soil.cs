@@ -136,7 +136,7 @@ namespace WoodWideWeb
 
         void OnValidate()
         {
-            FillGrid(0);
+            FillGrid(2);
         }
         void Start()
         {
@@ -155,7 +155,6 @@ namespace WoodWideWeb
                 return;
 
             // --- Bundle visualization ---
-            Gizmos.color = Color.lightGray;
 
             Vector3 size = col.size;
             Vector3 origin = col.center - size * 0.5f; // local origin (bottom-left-back)
@@ -202,7 +201,7 @@ namespace WoodWideWeb
                             bz * cellSize.z
                         );
 
-                        Gizmos.color = Color.gray;
+                        Gizmos.color = Color.black;
                         Gizmos.DrawWireCube(worldCenter, worldSize);
                     }
                 }
@@ -218,7 +217,7 @@ namespace WoodWideWeb
                 if (cell == null) continue;
                 if (cell.nutrients > 5f)
                 {
-                    Gizmos.color = Color.blue;
+                    Gizmos.color = Color.green;
                     Gizmos.DrawSphere(cell.position, 1f);
                 }
                 //else
