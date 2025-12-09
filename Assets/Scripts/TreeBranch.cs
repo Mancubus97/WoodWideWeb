@@ -12,13 +12,13 @@ using static UnityEditor.FilePathAttribute;
 namespace WoodWideWeb
 {
 
-    public class FungalNode
+    public class RootNode
     {
         public SoilCell occupied_cell = null;
         public Vector3 position = Vector3.zero;
-        public FungalNode parent = null; //if this stays null, it's the first node
+        public RootNode parent = null; //if this stays null, it's the first node
 
-        public FungalNode(Vector3 pos, FungalNode parent)
+        public RootNode(Vector3 pos, RootNode parent)
         {
             position = pos;
             this.parent = parent;
@@ -26,33 +26,23 @@ namespace WoodWideWeb
         }
     }
 
-    public class FungalBranch : MonoBehaviour
+    public class TreeBranch : MonoBehaviour
     {
-        public FungalBranch branchPrefab;
+        public TreeBranch branchPrefab;
 
-        public List<FungalNode> nodes = new List<FungalNode>();
-        public List<FungalBranch> branches = new List<FungalBranch>();
-        public float nutrientsStock = 0f;
-        //public static FungalBranch Instance { get; private set; }
+        public List<RootNode> nodes = new List<RootNode>();
+        public List<TreeBranch> branches = new List<TreeBranch>();
+        public List<FineBranch> fine_branches = new List<FineBranch>();
+        public float nutrientsStored = 0f;
 
-        //void Awake()
-        //{
-        //    if (Instance != null && Instance != this)
-        //    {
-        //        Destroy(gameObject);
-        //        return;
-        //    }
-
-        //    Instance = this;
-        //}
-            void CreateFirstNode()
+        void CreateFirstNode()
         {
-            Soil soil = FindFirstObjectByType<Soil>();
+            TreeBranch soil = FindFirstObjectByType<TreeBranch>();
             BoxCollider col = soil.GetComponent<BoxCollider>();
 
             Vector3 center = col.transform.position;
 
-            FungalNode firstNode = new FungalNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null);
+            RootNode firstNode = new RootNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null);
             nodes.Add(firstNode);
         }
 
@@ -66,12 +56,12 @@ namespace WoodWideWeb
                 CreateFirstNode();
         }
 
-        SoilCell DetermineNextCell(FungalNode current)
+        SoilCell DetermineNextCell(RootNode current)
         {
             SoilCell nextCell = null;
 
             List<SoilCell> candidate_cells = new List<SoilCell>(){
-                Soil.GetSoilCell(current.position + new Vector3(0, 20, 0)), // up
+                Soil.GetSoilCell(current.position + new Vector3(0, 0, -20)), // back
                 Soil.GetSoilCell(current.position + new Vector3(0, -20, 0)), // down
                 Soil.GetSoilCell(current.position + new Vector3(-20, 0, 0)), // left
                 Soil.GetSoilCell(current.position + new Vector3(20, 0, 0)), // right
@@ -93,21 +83,6 @@ namespace WoodWideWeb
             if (counter <= 20) // found a better cell
                 nextCell = candidate_cells[index];
 
-            // METHOD1
-            //if (nextCell == null)
-            //{
-            //    nextCell = candidate_cells[Random.Range(0, 6)];
-            //}
-
-            //if (current.parent != null)// Dont need to check for first node
-            //{
-            //    while (nextCell != null && nextCell == current.parent.occupied_cell) // find a random direction that is not the parent
-            //    {
-            //        nextCell = candidate_cells[Random.Range(0, 6)];
-            //    }
-            //}
-
-            // METHOD2
             if (nextCell == null)
             {
                 nextCell = current.parent != null ? current.parent.occupied_cell : null;
@@ -119,7 +94,7 @@ namespace WoodWideWeb
         public void GrowNode()
         {
             // last node
-            FungalNode last = nodes[nodes.Count - 1];
+            RootNode last = nodes[nodes.Count - 1];
 
             SoilCell nextCell = DetermineNextCell(last);
 
@@ -131,17 +106,18 @@ namespace WoodWideWeb
 
             Vector3 newPos = nextCell.position;//last.position + new Vector3(0, -soil.cellSize.y, 0);
 
-            if (nextCell.nutrients > 5f && Random.Range(0, 25) == 0) //
+
+            if (Random.Range(0, 50) == 0) //
             {
                 Quaternion rot = Random.rotation;
-                FungalBranch branch = Instantiate(branchPrefab, nextCell.position, rot);
+                TreeBranch branch = Instantiate(branchPrefab, nextCell.position, rot);
                 branches.Add(branch);
             }
 
-            nutrientsStock += nextCell.nutrients * 0.9f; // absorb some nutrients
+            nutrientsStored += nextCell.nutrients * 0.9f; // absorb some nutrients
             nextCell.nutrients *= 0.1f;
- 
-            nodes.Add(new FungalNode(newPos, last));
+
+            nodes.Add(new RootNode(newPos, last));
         }
 
         float elapsedTime = 0f;
@@ -153,13 +129,6 @@ namespace WoodWideWeb
             {
                 StartCoroutine(GrowLoop());
             }
-
-            //if (elapsedTime > 60f)
-            //{
-            //    Debug.Log("Total nutrients collected: " + nutrientsStock + " in " + elapsedTime);
-            //    //stop game 
-            //    UnityEditor.EditorApplication.isPlaying = false;
-            //}
         }
 
         bool isGrowing = false;
@@ -172,7 +141,7 @@ namespace WoodWideWeb
             {
                 GrowNode();
                 //yield return new WaitForSeconds(0.0001f);
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(5.0f);
             }
         }
 
@@ -185,7 +154,7 @@ namespace WoodWideWeb
 
                 for (int i = start; i < nodes.Count - 1; i++)
                 {
-                    Gizmos.color = new Color(1f, 1f , 1f, i / (float)nodes.Count);
+                    Gizmos.color = new Color(0.5f, 0.35f, 0.05f, 1f);
                     Gizmos.DrawLine(nodes[i].position, nodes[i + 1] != null ? nodes[i + 1].position : transform.position);
                 }
             }
@@ -194,6 +163,11 @@ namespace WoodWideWeb
                 Gizmos.DrawSphere(transform.position, 10);
             }
         }
+    }
+
+    public class FineBranch : TreeBranch
+    {
+
     }
 
 }

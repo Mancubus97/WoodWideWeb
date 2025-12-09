@@ -154,22 +154,17 @@ namespace WoodWideWeb
             if (col == null || grid == null)
                 return;
 
-            // --- Bundle visualization ---
-
             Vector3 size = col.size;
             Vector3 origin = col.center - size * 0.5f; // local origin (bottom-left-back)
 
-            // Convert local origin to world
-            Vector3 worldOrigin = transform.TransformPoint(origin);
+            //Draw the soil bounds
+            //Gizmos.color = Color.darkGreen;
+            //Gizmos.DrawCube(col.center, size);
 
-            Vector3 cellSize = new Vector3(
-                size.x / xGrid,
-                size.y / yGrid,
-                size.z / zGrid
-            );
 
+
+            // --- Bundle visualization ---
             int bundleSize = 1000;
-
             // cube root of bundle size
             int bundleStep = Mathf.Max(1, Mathf.RoundToInt(Mathf.Pow(bundleSize, 1f / 3f)));
 
