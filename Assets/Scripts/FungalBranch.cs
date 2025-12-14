@@ -28,6 +28,8 @@ namespace WoodWideWeb
 
     public class FungalBranch : MonoBehaviour
     {
+
+        public Soil soil;
         public FungalBranch branchPrefab;
 
         public List<FungalNode> nodes = new List<FungalNode>();
@@ -45,7 +47,7 @@ namespace WoodWideWeb
 
         //    Instance = this;
         //}
-            void CreateFirstNode()
+        void CreateFirstNode()
         {
             Soil soil = FindFirstObjectByType<Soil>();
             BoxCollider col = soil.GetComponent<BoxCollider>();
@@ -71,12 +73,12 @@ namespace WoodWideWeb
             SoilCell nextCell = null;
 
             List<SoilCell> candidate_cells = new List<SoilCell>(){
-                Soil.GetSoilCell(current.position + new Vector3(0, 20, 0)), // up
-                Soil.GetSoilCell(current.position + new Vector3(0, -20, 0)), // down
-                Soil.GetSoilCell(current.position + new Vector3(-20, 0, 0)), // left
-                Soil.GetSoilCell(current.position + new Vector3(20, 0, 0)), // right
-                Soil.GetSoilCell(current.position + new Vector3(0, 0, 20)), // forward
-                Soil.GetSoilCell(current.position + new Vector3(0, 0, -20)) // back
+                Soil.GetSoilCell(current.position + new Vector3(0, soil.cellSize.y, 0)), // up
+                Soil.GetSoilCell(current.position + new Vector3(0, -soil.cellSize.y, 0)), // down
+                Soil.GetSoilCell(current.position + new Vector3(-soil.cellSize.x, 0, 0)), // left
+                Soil.GetSoilCell(current.position + new Vector3(soil.cellSize.x, 0, 0)), // right
+                Soil.GetSoilCell(current.position + new Vector3(0, 0, soil.cellSize.z)), // forward
+                Soil.GetSoilCell(current.position + new Vector3(0, 0, -soil.cellSize.z)) // back
             };
 
             int index = Random.Range(0, 6);

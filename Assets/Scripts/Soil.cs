@@ -31,9 +31,9 @@ namespace WoodWideWeb
 
         static float falloff = 0.002f;
 
-        static int xGrid = 50;
-        static int yGrid = 25;
-        static int zGrid = 50;
+        static int xGrid = 100;
+        static int yGrid = 50;
+        static int zGrid = 100;
 
         static SoilCell[,,] grid;
 

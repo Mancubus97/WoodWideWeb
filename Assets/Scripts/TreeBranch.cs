@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TreeEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -34,6 +35,29 @@ namespace WoodWideWeb
         public List<TreeBranch> branches = new List<TreeBranch>();
         public List<FineBranch> fine_branches = new List<FineBranch>();
         public float nutrientsStored = 0f;
+        public float growthCost = 0.5f;
+        public int branchRate = 5;
+
+        int rootThickness = 5;
+
+        void CreateRoot(RootNode node, RootNode last)
+        {
+
+            for (int i = 0; i < rootThickness; i++)
+            {
+                if (i != 0)
+                {
+                    if (last != null && node.position.z != last.position.z)
+                        nodes.Add(new RootNode(new Vector3(node.position.x + (float)i, node.position.y, node.position.z), node.parent));
+                    else
+                        nodes.Add(new RootNode(new Vector3(node.position.x, node.position.y, node.position.z + (float)i), node.parent));
+                }
+                else
+                {
+                    nodes.Add(node);
+                }
+            }
+        }
 
         void CreateFirstNode()
         {
@@ -43,7 +67,9 @@ namespace WoodWideWeb
             Vector3 center = col.transform.position;
 
             RootNode firstNode = new RootNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null);
-            nodes.Add(firstNode);
+
+            CreateRoot(firstNode, null);
+            //nodes.Add(firstNode);
         }
 
         void OnValidate()
@@ -91,33 +117,51 @@ namespace WoodWideWeb
             return nextCell;
         }
 
-        public void GrowNode()
+        public void BranchOff(SoilCell nextCell)
         {
-            // last node
-            RootNode last = nodes[nodes.Count - 1];
-
-            SoilCell nextCell = DetermineNextCell(last);
-
-            if (nextCell == null)
+            if (nutrientsStored >= growthCost * 4 && Random.Range(0, branchRate) == 0) //
             {
-                Debug.Log("Returned Null Cell!");
-                return;
-            }
-
-            Vector3 newPos = nextCell.position;//last.position + new Vector3(0, -soil.cellSize.y, 0);
-
-
-            if (Random.Range(0, 50) == 0) //
-            {
+                Debug.Log("[TreeBranch] Branching off | nutrientsStored: " + nutrientsStored);
+                nutrientsStored = nutrientsStored - growthCost * 4;
                 Quaternion rot = Random.rotation;
                 TreeBranch branch = Instantiate(branchPrefab, nextCell.position, rot);
                 branches.Add(branch);
             }
+        }
 
-            nutrientsStored += nextCell.nutrients * 0.9f; // absorb some nutrients
-            nextCell.nutrients *= 0.1f;
+        public void GrowNode()
+        {
+            Debug.Log("[TreeBranch] Trying to grow node with nutrientsStored: " + nutrientsStored);
+            //if (nutrientsStored >= growthCost)
+            //{
+                nutrientsStored = nutrientsStored - growthCost;
+                // last node
+                RootNode last = nodes[nodes.Count - 1];
 
-            nodes.Add(new RootNode(newPos, last));
+                SoilCell nextCell = DetermineNextCell(last);
+
+                if (nextCell == null)
+                {
+                    Debug.Log("Returned Null Cell!");
+                    return;
+                }
+
+                Vector3 newPos = nextCell.position;//last.position + new Vector3(0, -soil.cellSize.y, 0);
+
+                BranchOff(nextCell);
+
+                nutrientsStored += nextCell.nutrients * 0.9f; // absorb some nutrients
+                nextCell.nutrients *= 0.1f;
+
+
+                CreateRoot(new RootNode(newPos, last), last);
+                //nodes.Add(new RootNode(newPos, last));
+            //}
+            //else
+            //{
+
+            //}
+                
         }
 
         float elapsedTime = 0f;
@@ -155,7 +199,8 @@ namespace WoodWideWeb
                 for (int i = start; i < nodes.Count - 1; i++)
                 {
                     Gizmos.color = new Color(0.5f, 0.35f, 0.05f, 1f);
-                    Gizmos.DrawLine(nodes[i].position, nodes[i + 1] != null ? nodes[i + 1].position : transform.position);
+                    if (i + 1 + rootThickness - 1 >= 0 && i + 1 + rootThickness - 1 < nodes.Count)
+                        Gizmos.DrawLine(nodes[i].position, nodes[i + 1 + rootThickness-1] != null ? nodes[i + 1 + rootThickness-1].position : transform.position);
                 }
             }
             else
