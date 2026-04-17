@@ -1,4 +1,5 @@
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -7,11 +8,14 @@ namespace WoodWideWeb
 
     public class SoilCell
     {
+        public RootNode root = null;
+        public FungalNode fungal = null;
+
         public float nutrients;
         public float water;
         public Vector3 position;
 
-        public SoilCell(Vector3 position, bool hotspot, float nutrients)
+        public SoilCell(Vector3 position, bool hotspot, float nutrients, RootNode root, FungalNode fungal)
         {
             if (hotspot)
             {
@@ -22,6 +26,8 @@ namespace WoodWideWeb
 
             water = Random.Range(0.2f, 0.8f);
             this.position = position;
+            this.root = root;
+            this.fungal = fungal;
         }
     }
 
@@ -64,7 +70,7 @@ namespace WoodWideWeb
 
             Vector3 hotspotPos;
             float nutrients = 0f;
-            float base_nutrients = 3f;
+            float base_nutrients = 0.1f;
             float distance;
 
             for (int i = 0; i < HighNutrientBlocks; i++)
@@ -92,7 +98,7 @@ namespace WoodWideWeb
 
                             if (x - randomx > -randomSize && x - randomx < randomSize && y - randomy > -randomSize && y - randomy < randomSize && z - randomz > -randomSize && z - randomz < randomSize)
                             {
-                                grid[x, y, z] = new SoilCell(cellPos, true, nutrients);
+                                grid[x, y, z] = new SoilCell(cellPos, true, nutrients, null, null);
                             }
                             else
                             {
@@ -100,9 +106,9 @@ namespace WoodWideWeb
                                 nutrients = base_nutrients * Mathf.Exp(-falloff * distance);
                                 //Debug.Log("Distance: " + distance + " Nutrients: " + nutrients);
                                 if (grid[x, y, z] == null)
-                                    grid[x, y, z] = new SoilCell(cellPos, false, nutrients);
+                                    grid[x, y, z] = new SoilCell(cellPos, false, nutrients, null, null);
                                 else if (nutrients > grid[x, y, z].nutrients)
-                                    grid[x, y, z] = new SoilCell(cellPos, false, nutrients);
+                                    grid[x, y, z] = new SoilCell(cellPos, false, nutrients, null, null);
                             }
 
 
@@ -127,7 +133,7 @@ namespace WoodWideWeb
                             distance = Vector3.Distance(col.center, new Vector3(Random.Range(0, col.size.x), Random.Range(0, col.size.y), Random.Range(0, col.size.z)));
                             nutrients = base_nutrients * Mathf.Exp(-falloff * distance);
 
-                            grid[x, y, z] = new SoilCell(cellPos, false, nutrients);
+                            grid[x, y, z] = new SoilCell(cellPos, false, nutrients, null, null);
                         }
 
             }
@@ -209,22 +215,28 @@ namespace WoodWideWeb
             //draw high nutrient cells
             foreach (SoilCell cell in grid)
             {
+                //share nutrients here to make most out of this foreach loop
+                if (cell.fungal != null && cell.root != null)
+                {
+                    Debug.Log("A connection between fungal and root has been detected!");
+                    Handles.Label(cell.position, "CONNECTED");
+                    cell.root.branch.fungal_network = cell.fungal.branch;
+                }
+
                 if (cell == null) continue;
                 if (cell.nutrients > 5f)
                 {
                     Gizmos.color = Color.green;
                     Gizmos.DrawSphere(cell.position, 1f);
                 }
-                //else
+                //else if (cell.nutrients > 0.5f)
                 //{
-                //    Gizmos.color = new Color(0f, 1f, 0f, cell.nutrients - 0.8f);
+                //    Gizmos.color = new Color(0f, 1f, 0f, cell.nutrients - .5f);
                 //    Gizmos.DrawSphere(cell.position, 0.5f);
                 //}
 
             }
         }
-
-
 
         public static SoilCell GetSoilCell(Vector3 worldPos)
         {

@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -14,15 +15,17 @@ namespace WoodWideWeb
 
     public class FungalNode
     {
+        public FungalBranch branch = null;
         public SoilCell occupied_cell = null;
         public Vector3 position = Vector3.zero;
         public FungalNode parent = null; //if this stays null, it's the first node
 
-        public FungalNode(Vector3 pos, FungalNode parent)
+        public FungalNode(Vector3 pos, FungalNode parent, FungalBranch branch)
         {
             position = pos;
             this.parent = parent;
             this.occupied_cell = Soil.GetSoilCell(pos);
+            this.branch = branch;
         }
     }
 
@@ -54,7 +57,7 @@ namespace WoodWideWeb
 
             Vector3 center = col.transform.position;
 
-            FungalNode firstNode = new FungalNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null);
+            FungalNode firstNode = new FungalNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null, this);
             nodes.Add(firstNode);
         }
 
@@ -85,10 +88,10 @@ namespace WoodWideWeb
             int counter = 0;
             while (candidate_cells[index] == null || candidate_cells[index].nutrients <= Soil.GetSoilCell(current.position).nutrients)
             {
-                if (counter > 20)
-                {
+                if (candidate_cells[index] != null && candidate_cells[index].root != null && candidate_cells[index].fungal == null
+                    || counter > 20)
                     break;
-                }
+
                 index = Random.Range(0, 6);
                 counter++;
             }
@@ -142,8 +145,11 @@ namespace WoodWideWeb
 
             nutrientsStock += nextCell.nutrients * 0.9f; // absorb some nutrients
             nextCell.nutrients *= 0.1f;
- 
-            nodes.Add(new FungalNode(newPos, last));
+
+            FungalNode new_node = new FungalNode(newPos, last, this);
+
+            nextCell.fungal = new_node;
+            nodes.Add(new_node);
         }
 
         float elapsedTime = 0f;
@@ -183,8 +189,9 @@ namespace WoodWideWeb
         {
             if (nodes.Count != 0 && nodes[0] != null)
             {
-                int start = Mathf.Max(0, nodes.Count - 300);
+                Handles.Label(nodes[0].position, "N: " + nutrientsStock);
 
+                int start = Mathf.Max(0, nodes.Count - 300);
                 for (int i = start; i < nodes.Count - 1; i++)
                 {
                     Gizmos.color = new Color(1f, 1f , 1f, i / (float)nodes.Count);

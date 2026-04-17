@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TreeEditor;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -15,27 +16,32 @@ namespace WoodWideWeb
 
     public class RootNode
     {
+        public TreeBranch branch = null;
         public SoilCell occupied_cell = null;
-        public Vector3 position = Vector3.zero;
         public RootNode parent = null; //if this stays null, it's the first node
 
-        public RootNode(Vector3 pos, RootNode parent)
+        public Vector3 position = Vector3.zero;
+
+        public RootNode(Vector3 position, RootNode parent, TreeBranch branch)
         {
-            position = pos;
+            this.branch = branch;
+            this.position = position;
             this.parent = parent;
-            this.occupied_cell = Soil.GetSoilCell(pos);
+            this.occupied_cell = Soil.GetSoilCell(position);
         }
     }
 
     public class TreeBranch : MonoBehaviour
     {
+        public FungalBranch fungal_network = null;
+
         public TreeBranch branchPrefab;
 
         public List<RootNode> nodes = new List<RootNode>();
         public List<TreeBranch> branches = new List<TreeBranch>();
         public List<FineBranch> fine_branches = new List<FineBranch>();
         public float nutrientsStored = 0f;
-        public float growthCost = 0.5f;
+        public float growthCost = 0.3f;
         public int branchRate = 5;
 
         int rootThickness = 5;
@@ -48,13 +54,22 @@ namespace WoodWideWeb
                 if (i != 0)
                 {
                     if (last != null && node.position.z != last.position.z)
-                        nodes.Add(new RootNode(new Vector3(node.position.x + (float)i, node.position.y, node.position.z), node.parent));
+                    {
+                        RootNode newnode = new RootNode(new Vector3(node.position.x + (float)i, node.position.y, node.position.z), node.parent, this);
+                        nodes.Add(newnode);
+                        newnode.occupied_cell.root = newnode;
+                    }
                     else
-                        nodes.Add(new RootNode(new Vector3(node.position.x, node.position.y, node.position.z + (float)i), node.parent));
+                    {
+                        RootNode newnode = new RootNode(new Vector3(node.position.x, node.position.y, node.position.z + (float)i), node.parent, this);
+                        nodes.Add(newnode);
+                        newnode.occupied_cell.root = newnode;
+                    }
                 }
                 else
                 {
                     nodes.Add(node);
+                    node.occupied_cell.root = node;
                 }
             }
         }
@@ -66,7 +81,7 @@ namespace WoodWideWeb
 
             Vector3 center = col.transform.position;
 
-            RootNode firstNode = new RootNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null);
+            RootNode firstNode = new RootNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null, this);
 
             CreateRoot(firstNode, null);
             //nodes.Add(firstNode);
@@ -131,9 +146,8 @@ namespace WoodWideWeb
 
         public void GrowNode()
         {
-            Debug.Log("[TreeBranch] Trying to grow node with nutrientsStored: " + nutrientsStored);
-            //if (nutrientsStored >= growthCost)
-            //{
+            if (nutrientsStored >= growthCost)
+            {
                 nutrientsStored = nutrientsStored - growthCost;
                 // last node
                 RootNode last = nodes[nodes.Count - 1];
@@ -153,15 +167,30 @@ namespace WoodWideWeb
                 nutrientsStored += nextCell.nutrients * 0.9f; // absorb some nutrients
                 nextCell.nutrients *= 0.1f;
 
+                RootNode new_node = new RootNode(newPos, last, this);
 
-                CreateRoot(new RootNode(newPos, last), last);
-                //nodes.Add(new RootNode(newPos, last));
-            //}
-            //else
-            //{
+                CreateRoot(new_node, last);
+            }
+            else
+            {
+                Debug.Log("Tree not enough N to grow, draining fungal network");
+                DrainFromNetwork(growthCost);
+            }
 
-            //}
-                
+        }
+
+        void DrainFromNetwork(float amount)
+        {
+            if (fungal_network != null)
+            {
+                if (fungal_network.nutrientsStock < amount)
+                {
+                    Debug.Log("Not enough nutrients in fungal network to drain! End game?");
+                    return;
+                }
+                fungal_network.nutrientsStock -= amount;
+                nutrientsStored += amount;
+            }
         }
 
         float elapsedTime = 0f;
@@ -171,6 +200,7 @@ namespace WoodWideWeb
             elapsedTime += Time.deltaTime;
             if (!isGrowing)
             {
+
                 StartCoroutine(GrowLoop());
             }
         }
@@ -194,8 +224,9 @@ namespace WoodWideWeb
         {
             if (nodes.Count != 0 && nodes[0] != null)
             {
-                int start = Mathf.Max(0, nodes.Count - 300);
+                Handles.Label(nodes[0].position, "N: " + nutrientsStored);
 
+                int start = Mathf.Max(0, nodes.Count - 300);
                 for (int i = start; i < nodes.Count - 1; i++)
                 {
                     Gizmos.color = new Color(0.5f, 0.35f, 0.05f, 1f);
