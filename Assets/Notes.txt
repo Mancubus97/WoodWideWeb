@@ -1,3 +1,11 @@
+TODO:  Fungal Network only expands if it is below Max stored resources
+
+TODO:  Fungal network grows towards trees that are not fully grown yet
+
+
+====================================================================================================================================================================================================================================================================
+====================================================================================================================================================================================================================================================================
+
 Root tips produce extremely faint electrical fields.
 Tree roots release strigolactones and other exudates, and fungi respond by:
 
@@ -17,8 +25,6 @@ Gameplay Ideas:
 - Trees can grow
 - Trees have a limit to which they can grow
 - fungal network has limited storage capacity
-- Fungal Network only expands if it is below Max stored resources
-- Fungal network grows towards trees that are not fully grown yet
 - Player can place trees, player cant control the fungi
 - Player can earn score by growing trees to max
 - Player has a highscore

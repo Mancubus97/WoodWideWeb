@@ -218,9 +218,13 @@ namespace WoodWideWeb
                 //share nutrients here to make most out of this foreach loop
                 if (cell.fungal != null && cell.root != null)
                 {
-                    Debug.Log("A connection between fungal and root has been detected!");
                     Handles.Label(cell.position, "CONNECTED");
                     cell.root.branch.fungal_network = cell.fungal.branch;
+
+                    if (!cell.fungal.branch.trees.Contains(cell.root.branch))
+                    {
+                        cell.fungal.branch.trees.Add(cell.root.branch);
+                    }
                 }
 
                 if (cell == null) continue;

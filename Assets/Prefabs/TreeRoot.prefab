@@ -112,6 +112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c0bdfddbfb13c49b44fea388fda3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  fungal_network: {fileID: 0}
   branchPrefab: {fileID: 6179501137694607250}
   branches: []
   fine_branches: []
