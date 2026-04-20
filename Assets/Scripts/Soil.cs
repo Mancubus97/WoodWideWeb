@@ -70,7 +70,7 @@ namespace WoodWideWeb
 
             Vector3 hotspotPos;
             float nutrients = 0f;
-            float base_nutrients = 0.1f;
+            float base_nutrients = 0.3f;
             float distance;
 
             for (int i = 0; i < HighNutrientBlocks; i++)
@@ -142,7 +142,7 @@ namespace WoodWideWeb
 
         void OnValidate()
         {
-            FillGrid(3);
+            FillGrid(0);
         }
         void Start()
         {
@@ -221,7 +221,7 @@ namespace WoodWideWeb
                     Handles.Label(cell.position, "CONNECTED");
                     cell.root.branch.fungal_network = cell.fungal.branch;
 
-                    if (!cell.fungal.branch.trees.Contains(cell.root.branch))
+                    if (cell.root.branch.nodes.Count / Constants.rootThickness < Constants.grown_tree_amount && !cell.fungal.branch.trees.Contains(cell.root.branch))
                     {
                         cell.fungal.branch.trees.Add(cell.root.branch);
                     }

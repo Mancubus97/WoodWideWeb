@@ -1,9 +1,10 @@
-
 using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using Unity.VisualScripting;
+using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -33,7 +34,7 @@ namespace WoodWideWeb
     public class FungalBranch : MonoBehaviour
     {
         //POINTER
-        private SoilCell cell_pointer;
+        private List<SoilCell> cell_pointers = new List<SoilCell>();
         private SoilCell destination;
         private int destinationIndex;
 
@@ -60,58 +61,61 @@ namespace WoodWideWeb
             if (nodes.Count == 0)
                 CreateFirstNode();
         }
+
+
+        int width = 8;
+        int height = 20;
+        int depth = 8;
+        int grow_attempts = 0;
         SoilCell FindTreeCell(FungalNode current)
         {
-            SoilCell nextCell = null;
-            int lookAhead = 40; // Change this to look further, e.g. 10
+            if (destination != null && current.position == destination.position)
+            {
+                destination = null;
+            }
 
             // Build candidate cells for all directions across all distances
             List<SoilCell> candidate_cells = new List<SoilCell>();
-            for (int i = 1; i <= lookAhead; i++)
-            {
-                candidate_cells.Add(Soil.GetSoilCell(current.position + new Vector3(0, soil.cellSize.y * i, 0)));   // up
-                candidate_cells.Add(Soil.GetSoilCell(current.position + new Vector3(0, -soil.cellSize.y * i, 0)));  // down
-                candidate_cells.Add(Soil.GetSoilCell(current.position + new Vector3(-soil.cellSize.x * i, 0, 0)));  // left
-                candidate_cells.Add(Soil.GetSoilCell(current.position + new Vector3(soil.cellSize.x * i, 0, 0)));   // right
-                candidate_cells.Add(Soil.GetSoilCell(current.position + new Vector3(0, 0, soil.cellSize.z * i)));   // forward
-                candidate_cells.Add(Soil.GetSoilCell(current.position + new Vector3(0, 0, -soil.cellSize.z * i)));  // back
-            }
+          
 
             if (destination != null)
             {
-                Debug.Log("Going towards destination");
-                return candidate_cells[destinationIndex % 6]; // step back to distance-1 cell in same direction
+                return destination;
             }
 
-            int totalCells = lookAhead * 6;
+            cell_pointers.Clear();
+            candidate_cells.Clear();
 
-            int index = Random.Range(0, totalCells);
-            cell_pointer = candidate_cells[index];
-            int counter = 0;
-            while (cell_pointer == null || cell_pointer.root == null)
+            for (int x = -width; x <= width; x++)
             {
-                if (counter > 80)
-                    break;
+                for (int y = -height; y < height; y++)
+                {
+                    for (int z = -depth; z <= depth; z++)
+                    {
+                        SoilCell cell = Soil.GetSoilCell(current.position + new Vector3(
+                            soil.cellSize.x * x,
+                            soil.cellSize.y * y,
+                            soil.cellSize.z * z
+                        ));
+                        candidate_cells.Add(cell);
+                        cell_pointers.Add(cell);
 
-                index = Random.Range(0, totalCells);
-                cell_pointer = candidate_cells[index];
-                counter++;
+                        if (cell?.root?.branch != null &&
+                            cell.root.branch.nodes.Count / Constants.rootThickness < Constants.grown_tree_amount)
+                        {
+                            destination = cell;
+                            cell_pointers.Clear();
+                            return destination;
+                        }
+                    }
+                }
             }
+            // Filter to only valid, non-null cells first:
+            List<SoilCell> validCells = candidate_cells.Where(c => c != null).ToList();
+            if (validCells.Count > 0)
+                return validCells[Random.Range(0, validCells.Count)];
 
-            if (counter <= 80) // found a tree cell
-            {
-                Debug.Log("Found tree cell after " + counter + " tries");
-                destination = cell_pointer;
-                destinationIndex = index;
-                return candidate_cells[index % 6]; // step back to distance-1 cell in same direction
-                 
-            } 
-
-            if (nextCell == null) // grow random direction otherwise
-            {
-                nextCell = candidate_cells[Random.Range(0, 6)];
-            }
-            return nextCell;
+            return null;
         }
         SoilCell FindHighNutrientCell(FungalNode current)
         { 
@@ -173,7 +177,7 @@ namespace WoodWideWeb
 
             if (nextCell == null)
             {
-                Debug.Log("Returned Null Cell!");
+                //Debug.Log("Returned Null Cell!");
                 return;
             }
 
@@ -214,7 +218,8 @@ namespace WoodWideWeb
         }
 
         bool isGrowing = false;
-        int maxStock = 1000;
+        int maxStock = 5000;
+        int fungal_view_distance = 900;
 
         IEnumerator GrowLoop()
         {
@@ -223,6 +228,17 @@ namespace WoodWideWeb
             while (nutrientsStock < maxStock)   // grow if below max stock
             {
                 GrowNode();
+                // dequeue any fully grown trees
+                foreach (TreeBranch tree in trees)
+                {
+                    if (tree != null && tree.nodes.Count >= Constants.grown_tree_amount)
+                    {
+                        Debug.Log("Tree fully grown!");
+                        tree.isGrowing = false;
+                        trees.Remove(tree);
+                        break;
+                    }
+                }
                 //yield return new WaitForSeconds(0.0001f);
                 yield return new WaitForSeconds(0.1f);
             }
@@ -233,9 +249,9 @@ namespace WoodWideWeb
         {
             if (nodes.Count != 0 && nodes[0] != null)
             {
-                Handles.Label(nodes[0].position, "N: " + nutrientsStock);
+                Handles.Label(nodes[0].position, "Fungal N: " + nutrientsStock);
 
-                int start = Mathf.Max(0, nodes.Count - 300);
+                int start = Mathf.Max(0, nodes.Count - fungal_view_distance);
                 for (int i = start; i < nodes.Count - 1; i++)
                 {
                     Gizmos.color = new Color(1f, 1f , 1f, i / (float)nodes.Count);
@@ -247,13 +263,15 @@ namespace WoodWideWeb
                 Gizmos.DrawSphere(transform.position, 10);
             }
 
-
-            if (cell_pointer != null)
-            {
-                //draw yellow spehere at cell pointer
-                Gizmos.color = Color.yellow;
-                Gizmos.DrawSphere(cell_pointer.position, 5);
-            }
+            //foreach(SoilCell cell in cell_pointers)
+            //{
+            //    if (cell != null)
+            //    {
+            //        //draw yellow cube at cell pointer
+            //        Gizmos.color = Color.yellow;
+            //        Gizmos.DrawCube(cell.position, soil.cellSize * 0.5f);
+            //    }
+            //}
              
             
 

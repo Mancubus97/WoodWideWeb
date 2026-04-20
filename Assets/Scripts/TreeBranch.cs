@@ -39,17 +39,15 @@ namespace WoodWideWeb
 
         public List<RootNode> nodes = new List<RootNode>();
         public List<TreeBranch> branches = new List<TreeBranch>();
-        public List<FineBranch> fine_branches = new List<FineBranch>();
         public float nutrientsStored = 0f;
-        public float growthCost = 0.3f;
+        public float growthCost = 0.2f;
         public int branchRate = 5;
 
-        int rootThickness = 5;
 
         void CreateRoot(RootNode node, RootNode last)
         {
 
-            for (int i = 0; i < rootThickness; i++)
+            for (int i = 0; i < Constants.rootThickness; i++)
             {
                 if (i != 0)
                 {
@@ -146,6 +144,9 @@ namespace WoodWideWeb
 
         public void GrowNode()
         {
+            if (nodes.Count / Constants.rootThickness >= Constants.grown_tree_amount)
+                return;
+
             if (nutrientsStored >= growthCost)
             {
                 nutrientsStored = nutrientsStored - growthCost;
@@ -173,7 +174,6 @@ namespace WoodWideWeb
             }
             else
             {
-                Debug.Log("Tree not enough N to grow, draining fungal network");
                 DrainFromNetwork(growthCost);
             }
 
@@ -200,18 +200,17 @@ namespace WoodWideWeb
             elapsedTime += Time.deltaTime;
             if (!isGrowing)
             {
-
                 StartCoroutine(GrowLoop());
             }
         }
 
-        bool isGrowing = false;
+        public bool isGrowing = false;
 
         IEnumerator GrowLoop()
         {
             isGrowing = true;
 
-            while (true)   // grow forever
+            while (true)   // grow till grown
             {
                 GrowNode();
                 //yield return new WaitForSeconds(0.0001f);
@@ -229,9 +228,12 @@ namespace WoodWideWeb
                 int start = Mathf.Max(0, nodes.Count - 300);
                 for (int i = start; i < nodes.Count - 1; i++)
                 {
-                    Gizmos.color = new Color(0.5f, 0.35f, 0.05f, 1f);
-                    if (i + 1 + rootThickness - 1 >= 0 && i + 1 + rootThickness - 1 < nodes.Count)
-                        Gizmos.DrawLine(nodes[i].position, nodes[i + 1 + rootThickness-1] != null ? nodes[i + 1 + rootThickness-1].position : transform.position);
+                    if (nodes.Count / Constants.rootThickness >= Constants.grown_tree_amount)
+                        Gizmos.color = Color.green;
+                    else
+                        Gizmos.color = new Color(0.5f, 0.35f, 0.05f, 1f);
+                    if (i + 1 + Constants.rootThickness - 1 >= 0 && i + 1 + Constants.rootThickness - 1 < nodes.Count)
+                        Gizmos.DrawLine(nodes[i].position, nodes[i + 1 + Constants.rootThickness - 1] != null ? nodes[i + 1 + Constants.rootThickness - 1].position : transform.position);
                 }
             }
             else
@@ -241,9 +243,5 @@ namespace WoodWideWeb
         }
     }
 
-    public class FineBranch : TreeBranch
-    {
-
-    }
 
 }
