@@ -33,15 +33,16 @@ namespace WoodWideWeb
 
     public class TreeBranch : MonoBehaviour
     {
-        public FungalBranch fungal_network = null;
-
         public TreeBranch branchPrefab;
-
+        public FungalBranch fungal_network = null;
         public List<RootNode> nodes = new List<RootNode>();
+
         public List<TreeBranch> branches = new List<TreeBranch>();
-        public float nutrientsStored = 0f;
-        public float growthCost = 0.2f;
-        public int branchRate = 5;
+        private float nutrientsStored = 8f;
+        private float growthCost = 3f;
+        private int branchRate = 5;
+        private float branchoff_cost_multiplier = 4f;
+        private float growth_delay = 5f;
 
 
         void CreateRoot(RootNode node, RootNode last)
@@ -82,7 +83,6 @@ namespace WoodWideWeb
             RootNode firstNode = new RootNode(new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z), null, this);
 
             CreateRoot(firstNode, null);
-            //nodes.Add(firstNode);
         }
 
         void OnValidate()
@@ -132,10 +132,10 @@ namespace WoodWideWeb
 
         public void BranchOff(SoilCell nextCell)
         {
-            if (nutrientsStored >= growthCost * 4 && Random.Range(0, branchRate) == 0) //
+            if (nutrientsStored >= growthCost * branchoff_cost_multiplier && Random.Range(0, branchRate) == 0)
             {
-                Debug.Log("[TreeBranch] Branching off | nutrientsStored: " + nutrientsStored);
-                nutrientsStored = nutrientsStored - growthCost * 4;
+                Debug.Log("[TreeBranch] Branching off with nutrientsStored: " + nutrientsStored);
+                nutrientsStored = nutrientsStored - growthCost * branchoff_cost_multiplier;
                 Quaternion rot = Random.rotation;
                 TreeBranch branch = Instantiate(branchPrefab, nextCell.position, rot);
                 branches.Add(branch);
@@ -161,7 +161,7 @@ namespace WoodWideWeb
                     return;
                 }
 
-                Vector3 newPos = nextCell.position;//last.position + new Vector3(0, -soil.cellSize.y, 0);
+                Vector3 newPos = nextCell.position; //last.position + new Vector3(0, -soil.cellSize.y, 0);
 
                 BranchOff(nextCell);
 
@@ -210,11 +210,11 @@ namespace WoodWideWeb
         {
             isGrowing = true;
 
-            while (true)   // grow till grown
+            while (true) // grow till grown
             {
                 GrowNode();
                 //yield return new WaitForSeconds(0.0001f);
-                yield return new WaitForSeconds(5.0f);
+                yield return new WaitForSeconds(growth_delay);
             }
         }
 

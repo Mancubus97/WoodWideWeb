@@ -19,12 +19,11 @@ namespace WoodWideWeb
         {
             if (hotspot)
             {
-                this.nutrients = Random.Range(5.0f, 10.0f);
+                this.nutrients = Random.Range(Constants.hotspot_lower, Constants.hotspot_higher);
             }
             else
                 this.nutrients = nutrients;
 
-            water = Random.Range(0.2f, 0.8f);
             this.position = position;
             this.root = root;
             this.fungal = fungal;
@@ -142,7 +141,7 @@ namespace WoodWideWeb
 
         void OnValidate()
         {
-            FillGrid(0);
+            FillGrid(2);
         }
         void Start()
         {
@@ -208,39 +207,6 @@ namespace WoodWideWeb
                 }
             }
         }
-        void OnDrawGizmos()
-        {
-            DrawBundles();
-
-            //draw high nutrient cells
-            foreach (SoilCell cell in grid)
-            {
-                //share nutrients here to make most out of this foreach loop
-                if (cell.fungal != null && cell.root != null)
-                {
-                    Handles.Label(cell.position, "CONNECTED");
-                    cell.root.branch.fungal_network = cell.fungal.branch;
-
-                    if (cell.root.branch.nodes.Count / Constants.rootThickness < Constants.grown_tree_amount && !cell.fungal.branch.trees.Contains(cell.root.branch))
-                    {
-                        cell.fungal.branch.trees.Add(cell.root.branch);
-                    }
-                }
-
-                if (cell == null) continue;
-                if (cell.nutrients > 5f)
-                {
-                    Gizmos.color = Color.green;
-                    Gizmos.DrawSphere(cell.position, 1f);
-                }
-                //else if (cell.nutrients > 0.5f)
-                //{
-                //    Gizmos.color = new Color(0f, 1f, 0f, cell.nutrients - .5f);
-                //    Gizmos.DrawSphere(cell.position, 0.5f);
-                //}
-
-            }
-        }
 
         public static SoilCell GetSoilCell(Vector3 worldPos)
         {
@@ -277,6 +243,41 @@ namespace WoodWideWeb
         {
 
         }
+        void OnDrawGizmos()
+        {
+            DrawBundles();
+
+            //draw high nutrient cells
+            foreach (SoilCell cell in grid)
+            {
+                //share nutrients here to make most out of this foreach loop
+                if (cell.fungal != null && cell.root != null)
+                {
+                    Handles.Label(cell.position, "CONNECTED");
+                    cell.root.branch.fungal_network = cell.fungal.branch;
+
+                    if (cell.root.branch.nodes.Count / Constants.rootThickness < Constants.grown_tree_amount && !cell.fungal.branch.trees.Contains(cell.root.branch))
+                    {
+                        cell.fungal.branch.trees.Add(cell.root.branch);
+                    }
+                }
+
+                if (cell == null) continue;
+                if (cell.nutrients > 5f)
+                {
+                    Gizmos.color = Color.green;
+                    Gizmos.DrawSphere(cell.position, 1f);
+                }
+                //else if (cell.nutrients > 0.5f)
+                //{
+                //    Gizmos.color = new Color(0f, 1f, 0f, cell.nutrients - .5f);
+                //    Gizmos.DrawSphere(cell.position, 0.5f);
+                //}
+
+            }
+        }
     }
+
+
 }
 

@@ -22,11 +22,11 @@ namespace WoodWideWeb
         public Vector3 position = Vector3.zero;
         public FungalNode parent = null; //if this stays null, it's the first node
 
-        public FungalNode(Vector3 pos, FungalNode parent, FungalBranch branch)
+        public FungalNode(Vector3 position, FungalNode parent, FungalBranch branch)
         {
-            position = pos;
+            this.position = position;
             this.parent = parent;
-            this.occupied_cell = Soil.GetSoilCell(pos);
+            this.occupied_cell = Soil.GetSoilCell(position);
             this.branch = branch;
         }
     }
@@ -34,9 +34,8 @@ namespace WoodWideWeb
     public class FungalBranch : MonoBehaviour
     {
         //POINTER
-        private List<SoilCell> cell_pointers = new List<SoilCell>();
-        private SoilCell destination;
-        private int destinationIndex;
+        public List<SoilCell> cell_candidates = new List<SoilCell>();
+        public SoilCell destination;
 
         public Soil soil;
         public FungalBranch branchPrefab;
@@ -45,6 +44,15 @@ namespace WoodWideWeb
         public List<FungalNode> nodes = new List<FungalNode>();
         public List<FungalBranch> branches = new List<FungalBranch>();
         public float nutrientsStock = 0f;
+        int width = 4;
+        int height = 10;
+        int depth = 4;
+        int grow_attempts = 0;
+        int branchoff_difficulty = 25;
+
+        bool isGrowing = false;
+        int maxStock = 5000;
+        int fungal_view_distance = 900;
         void CreateFirstNode()
         {
             Soil soil = FindFirstObjectByType<Soil>();
@@ -61,12 +69,6 @@ namespace WoodWideWeb
             if (nodes.Count == 0)
                 CreateFirstNode();
         }
-
-
-        int width = 8;
-        int height = 20;
-        int depth = 8;
-        int grow_attempts = 0;
         SoilCell FindTreeCell(FungalNode current)
         {
             if (destination != null && current.position == destination.position)
@@ -74,17 +76,12 @@ namespace WoodWideWeb
                 destination = null;
             }
 
-            // Build candidate cells for all directions across all distances
-            List<SoilCell> candidate_cells = new List<SoilCell>();
-          
-
             if (destination != null)
             {
                 return destination;
             }
 
-            cell_pointers.Clear();
-            candidate_cells.Clear();
+            cell_candidates.Clear();
 
             for (int x = -width; x <= width; x++)
             {
@@ -97,73 +94,51 @@ namespace WoodWideWeb
                             soil.cellSize.y * y,
                             soil.cellSize.z * z
                         ));
-                        candidate_cells.Add(cell);
-                        cell_pointers.Add(cell);
+                        cell_candidates.Add(cell);
 
                         if (cell?.root?.branch != null &&
                             cell.root.branch.nodes.Count / Constants.rootThickness < Constants.grown_tree_amount)
                         {
                             destination = cell;
-                            cell_pointers.Clear();
+                            cell_candidates.Clear();
                             return destination;
                         }
                     }
                 }
             }
-            // Filter to only valid, non-null cells first:
-            List<SoilCell> validCells = candidate_cells.Where(c => c != null).ToList();
+
+
+            // go to random next cell if no tree is found
+            List<SoilCell> validCells = cell_candidates.Where(c => c != null).ToList();
             if (validCells.Count > 0)
                 return validCells[Random.Range(0, validCells.Count)];
 
             return null;
         }
         SoilCell FindHighNutrientCell(FungalNode current)
-        { 
-            SoilCell nextCell = null;
+        {
+            Vector3 pos = current.position;
+            SoilCell currentCell = Soil.GetSoilCell(pos);
 
-            List<SoilCell> candidate_cells = new List<SoilCell>(){
-                Soil.GetSoilCell(current.position + new Vector3(0, soil.cellSize.y, 0)), // up
-                Soil.GetSoilCell(current.position + new Vector3(0, -soil.cellSize.y, 0)), // down
-                Soil.GetSoilCell(current.position + new Vector3(-soil.cellSize.x, 0, 0)), // left
-                Soil.GetSoilCell(current.position + new Vector3(soil.cellSize.x, 0, 0)), // right
-                Soil.GetSoilCell(current.position + new Vector3(0, 0, soil.cellSize.z)), // forward
-                Soil.GetSoilCell(current.position + new Vector3(0, 0, -soil.cellSize.z)) // back
+            Vector3[] directions = {
+                new Vector3( soil.cellSize.x,  0,              0),
+                new Vector3(-soil.cellSize.x,  0,              0),
+                new Vector3( 0,               soil.cellSize.y,  0),
+                new Vector3( 0,              -soil.cellSize.y,  0),
+                new Vector3( 0,               0,               soil.cellSize.z),
+                new Vector3( 0,               0,              -soil.cellSize.z)
             };
 
-            int index = Random.Range(0, 6);
-            int counter = 0;
-            while (candidate_cells[index] == null || candidate_cells[index].nutrients <= Soil.GetSoilCell(current.position).nutrients)
-            {
-                if (candidate_cells[index] != null && candidate_cells[index].root != null && candidate_cells[index].fungal == null || 
-                    counter > 20)
-                    break;
+            var candidates = directions
+                .Select(d => Soil.GetSoilCell(pos + d))
+                .Where(c => c != null && c.fungal == null && c.nutrients > currentCell.nutrients)
+                .ToList();
 
-                index = Random.Range(0, 6);
-                counter++;
-            }
-            if (counter <= 20) // found a better cell
-                nextCell = candidate_cells[index];
+            if (candidates.Count > 0)
+                return candidates[Random.Range(0, candidates.Count)];
 
-            // METHOD1 - if no better cell, try random direction (simulate growing around obstacles)
-            //if (nextCell == null)
-            //{
-            //    nextCell = candidate_cells[Random.Range(0, 6)];
-            //}
-            //if (current.parent != null)// Dont need to check for first node
-            //{
-            //    while (nextCell != null && nextCell == current.parent.occupied_cell) // find a random direction that is not the parent
-            //    {
-            //        nextCell = candidate_cells[Random.Range(0, 6)];
-            //    }
-            //}
-
-            // METHOD2 - if no better cell, try to grow back towards parent (simulate growing around obstacles)
-            if (nextCell == null)
-            {
-                nextCell = current.parent != null ? current.parent.occupied_cell : null;
-            }
-
-            return nextCell;
+            // Fall back to parent if no better cell found
+            return current.parent?.occupied_cell;
         }
 
         public void GrowNode()
@@ -183,7 +158,7 @@ namespace WoodWideWeb
 
             Vector3 newPos = nextCell.position;
 
-            if (nextCell.nutrients > 5f && Random.Range(0, 25) == 0) // branch off
+            if (nextCell.nutrients > Constants.hotspot_lower && Random.Range(0, branchoff_difficulty) == 0) // branch off because we are inside a hotspot
             {
                 Quaternion rot = Random.rotation;
                 FungalBranch branch = Instantiate(branchPrefab, nextCell.position, rot);
@@ -216,10 +191,6 @@ namespace WoodWideWeb
             //    UnityEditor.EditorApplication.isPlaying = false;
             //}
         }
-
-        bool isGrowing = false;
-        int maxStock = 5000;
-        int fungal_view_distance = 900;
 
         IEnumerator GrowLoop()
         {
@@ -263,17 +234,17 @@ namespace WoodWideWeb
                 Gizmos.DrawSphere(transform.position, 10);
             }
 
-            //foreach(SoilCell cell in cell_pointers)
-            //{
-            //    if (cell != null)
-            //    {
-            //        //draw yellow cube at cell pointer
-            //        Gizmos.color = Color.yellow;
-            //        Gizmos.DrawCube(cell.position, soil.cellSize * 0.5f);
-            //    }
-            //}
-             
-            
+            foreach (SoilCell cell in cell_candidates)
+            {
+                if (cell != null)
+                {
+                    //draw yellow cube at cell pointer
+                    Gizmos.color = Color.yellow;
+                    Gizmos.DrawCube(cell.position, soil.cellSize * 0.5f);
+                }
+            }
+
+
 
         }
     }
