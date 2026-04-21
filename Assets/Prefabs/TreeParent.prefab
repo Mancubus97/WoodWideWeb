@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 7159013952530662794}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -383.78342, y: -248.4, z: -277.23776}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 20, y: 20, z: 20}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -92,6 +92,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &7425834844361127924
 GameObject:
@@ -102,6 +103,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3509238376420498219}
+  - component: {fileID: 8523436821916251751}
   m_Layer: 0
   m_Name: TreeParent
   m_TagString: Untagged
@@ -118,7 +120,7 @@ Transform:
   m_GameObject: {fileID: 7425834844361127924}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 48.28342, y: 334.89, z: 5.53775}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -127,6 +129,27 @@ Transform:
   - {fileID: 6428060444149289529}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!205 &8523436821916251751
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7425834844361127924}
+  serializedVersion: 3
+  m_LocalReferencePoint: {x: 12.285324, y: 158.007, z: 1.1911621}
+  m_Size: 316.62753
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 3190787187011564325}
+    - renderer: {fileID: 6066625809216404867}
+  m_Enabled: 1
+  m_GlobalIlluminationLOD: 0
 --- !u!1 &9147690918960319995
 GameObject:
   m_ObjectHideFlags: 0
@@ -154,7 +177,7 @@ Transform:
   m_GameObject: {fileID: 9147690918960319995}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -383.78342, y: -248.4, z: -277.23776}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 20, y: 20, z: 20}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -215,6 +238,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1001 &7258701904392826004
 PrefabInstance:
@@ -226,15 +250,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4434101725754506925, guid: e163122fe0a247a49a9a26500ed116c3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -383.78342
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4434101725754506925, guid: e163122fe0a247a49a9a26500ed116c3, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -248.4
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4434101725754506925, guid: e163122fe0a247a49a9a26500ed116c3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -277.23776
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4434101725754506925, guid: e163122fe0a247a49a9a26500ed116c3, type: 3}
       propertyPath: m_LocalRotation.w
