@@ -795,6 +795,75 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   cellSize: {x: 20, y: 4, z: 20}
+--- !u!1001 &1276538135
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 462
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 65
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3509238376420498219, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3566263109152795398, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: branchRate
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3566263109152795398, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: growthCost
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3566263109152795398, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: nutrientsStored
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7425834844361127924, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
+      propertyPath: m_Name
+      value: Tree2
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
 --- !u!1 &1349854790
 GameObject:
   m_ObjectHideFlags: 0
@@ -807,6 +876,7 @@ GameObject:
   - component: {fileID: 1349854794}
   - component: {fileID: 1349854793}
   - component: {fileID: 1349854792}
+  - component: {fileID: 1349854795}
   m_Layer: 0
   m_Name: Camera
   m_TagString: Untagged
@@ -914,7 +984,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 43.7
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -932,6 +1002,22 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!114 &1349854795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1349854790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73498d69dcc2447429cad3a7edf74af0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenUI
+  fontSize: 45
+  textColor: {r: 0.654088, g: 0.30267733, b: 0.0431944, a: 1}
+  paddingRight: 650
+  paddingTop: 12
 --- !u!1 &1734102872
 GameObject:
   m_ObjectHideFlags: 0
@@ -1537,7 +1623,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7425834844361127924, guid: ce91bcd62e6326b4a9972fea0d2ef4cc, type: 3}
       propertyPath: m_Name
-      value: TreeParent
+      value: Tree1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1557,4 +1643,5 @@ SceneRoots:
   - {fileID: 424512928}
   - {fileID: 1777103446}
   - {fileID: 7441560763359108043}
+  - {fileID: 1276538135}
   - {fileID: 1734102879}
