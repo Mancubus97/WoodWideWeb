@@ -45,7 +45,7 @@ namespace WoodWideWeb
         public List<FungalBranch> branches = new List<FungalBranch>();
         public float nutrientsStock = 0f;
         int width = 4;
-        int height = 10;
+        int height = 30;
         int depth = 4;
         int grow_attempts = 0;
         int branchoff_difficulty = 25;
@@ -205,6 +205,7 @@ namespace WoodWideWeb
                     if (tree != null && tree.nodes.Count >= Constants.grown_tree_amount)
                     {
                         Debug.Log("Tree fully grown!");
+                        Constants.score++;
                         tree.isGrowing = false;
                         trees.Remove(tree);
                         break;

@@ -18,6 +18,7 @@ namespace WoodWideWeb
         {
             textMesh = GetComponent<TextMesh>();
             textMesh.text = "FPS: " + (1.0f / Time.deltaTime).ToString("F2") + "\n";
+            textMesh.text = "Score: " + Constants.score + "\n";
             //textMesh.text += "Total Nodes: " + FungalBranch.Instance.nodes.Count;
             //foreach (FungalBranch branch in FungalBranch.FindAnyObjectByType<FungalBranch>().branches)
             //{
