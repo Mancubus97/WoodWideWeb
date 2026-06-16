@@ -212,7 +212,7 @@ namespace WoodWideWeb
                     }
                 }
                 //yield return new WaitForSeconds(0.0001f);
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.05f);
             }
         }
 
@@ -235,15 +235,15 @@ namespace WoodWideWeb
                 Gizmos.DrawSphere(transform.position, 10);
             }
 
-            foreach (SoilCell cell in cell_candidates)
-            {
-                if (cell != null)
-                {
-                    //draw yellow cube at cell pointer
-                    Gizmos.color = Color.yellow;
-                    Gizmos.DrawCube(cell.position, soil.cellSize * 0.5f);
-                }
-            }
+            //foreach (SoilCell cell in cell_candidates)
+            //{
+            //    if (cell != null)
+            //    {
+            //        //draw yellow cube at cell pointer
+            //        Gizmos.color = Color.yellow;
+            //        Gizmos.DrawCube(cell.position, soil.cellSize * 0.5f);
+            //    }
+            //}
 
 
 

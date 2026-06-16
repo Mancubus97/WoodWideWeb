@@ -34,7 +34,7 @@ namespace WoodWideWeb
     {
         private Renderer rend;
 
-        static float falloff = 0.002f;
+        static float falloff = 0.0005f;
 
         static int xGrid = 100;
         static int yGrid = 50;
@@ -69,7 +69,7 @@ namespace WoodWideWeb
 
             Vector3 hotspotPos;
             float nutrients = 0f;
-            float base_nutrients = 0.3f;
+            float base_nutrients = 0.9f;
             float distance;
 
             for (int i = 0; i < HighNutrientBlocks; i++)
