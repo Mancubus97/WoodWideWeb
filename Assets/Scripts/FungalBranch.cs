@@ -50,7 +50,13 @@ namespace WoodWideWeb
 
         bool isGrowing = false;
         int maxStock = 5000;
-        int fungal_view_distance = 300;
+        int fungal_view_distance = 600;
+        // 0 = very inaccurate (lots of circling / random), 1 = fully accurate (always pick best step)
+        public float accurateness = 0.1f;
+        // number of FindTreeCell attempts before giving up on a remembered destination
+        public int giveUpAttempts = 2000;
+        int destinationAttempts = 0;
+        private TreeBranch found_tree = null;
         void CreateFirstNode()
         {
             Soil soil = FindAnyObjectByType<Soil>();
@@ -70,9 +76,25 @@ namespace WoodWideWeb
 
         SoilCell FindTreeCell(FungalNode current)
         {
-            if (destination != null && current.position == destination.position)
+            // if we've reached the destination cell, mark the tree as discovered and reset attempts
+            if (found_tree != null && found_tree.nodes?.Count >= Constants.grown_tree_amount) // && destination != null && current.position == destination.position
             {
+                trees.Add(found_tree);
                 destination = null;
+                destinationAttempts = 0;
+            }
+
+            // if we have a remembered destination, track attempts and give up after a limit
+            if (destination != null)
+            {
+                destinationAttempts++;
+                if (giveUpAttempts > 0 && destinationAttempts >= giveUpAttempts)
+                {
+                    // give up on this destination for now
+                    destination = null;
+                    found_tree = null;
+                    destinationAttempts = 0;
+                }
             }
 
             cell_candidates.Clear();
@@ -96,8 +118,9 @@ namespace WoodWideWeb
                             && !trees.Contains(cell.root.branch))
                         {
                             // remember the location of an ungrown tree but don't jump straight to it
+                            found_tree = cell.root.branch;
                             destination = cell;
-                            trees.Add(cell.root.branch);
+                            destinationAttempts = 0;
                             // continue scanning so we have a list of nearby candidate steps
                         }
                     }
@@ -135,22 +158,27 @@ namespace WoodWideWeb
                     // prefer neighbors that reduce distance to destination
                     float currentDist = Vector3.Distance(current.position, destination.position);
                     var better = neighbors.Where(c => Vector3.Distance(c.position, destination.position) < currentDist).ToList();
-                    if (better.Count > 0)
-                    {
-                        // choose the candidate that gets closest to destination; break ties by direction alignment
-                        Vector3 dirToDest = (destination.position - current.position).normalized;
-                        return better
-                            .OrderBy(c => Vector3.Distance(c.position, destination.position))
-                            .ThenByDescending(c => Vector3.Dot(dirToDest, (c.position - current.position).normalized))
-                            .First();
-                    }
-
-                    // otherwise pick the neighbor that gets closest to destination, prefer those aligned with direction
                     Vector3 dir = (destination.position - current.position).normalized;
-                    return neighbors
+
+                    // Helper: order candidates by closeness to destination and directional alignment
+                    System.Func<IEnumerable<SoilCell>, List<SoilCell>> orderCandidates = (cols) =>
+                        cols
                         .OrderBy(c => Vector3.Distance(c.position, destination.position))
                         .ThenByDescending(c => Vector3.Dot(dir, (c.position - current.position).normalized))
-                        .First();
+                        .ToList();
+
+                    if (better.Count > 0)
+                    {
+                        var orderedBetter = orderCandidates(better);
+                        int maxRank = Mathf.Clamp(Mathf.FloorToInt((1f - Mathf.Clamp01(accurateness)) * (orderedBetter.Count - 1)), 0, orderedBetter.Count - 1);
+                        int chosenIndex = Random.Range(0, maxRank + 1);
+                        return orderedBetter[chosenIndex];
+                    }
+
+                    var orderedNeighbors = orderCandidates(neighbors);
+                    int maxRankN = Mathf.Clamp(Mathf.FloorToInt((1f - Mathf.Clamp01(accurateness)) * (orderedNeighbors.Count - 1)), 0, orderedNeighbors.Count - 1);
+                    int chosenN = Random.Range(0, maxRankN + 1);
+                    return orderedNeighbors[chosenN];
                 }
                 // if no immediate neighbors available, fall through to wider random choice below
             }

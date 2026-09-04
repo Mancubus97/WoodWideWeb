@@ -42,7 +42,7 @@ namespace WoodWideWeb
         private float growthCost = 3f;
         private int branchRate = 5;
         private float branchoff_cost_multiplier = 4f;
-        private float growth_delay = 5f;
+        private float growth_delay = 15f;
 
 
         void CreateRoot(RootNode node, RootNode last)
