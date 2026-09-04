@@ -11,5 +11,7 @@ namespace WoodWideWeb
         public const float hotspot_lower = 5f;
         public const float hotspot_higher = 10f;
         public static int score = 0;
+
+        public static float connection_distance = 10f;
     }
 }

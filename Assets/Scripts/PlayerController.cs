@@ -42,7 +42,21 @@ public class PlayerController : MonoBehaviour
         xRotation = Mathf.Clamp(xRotation, -80f, 80f);
 
         cam.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up * mouseX);
+        transform.Rotate(Vector3.up * mouseX); 
+
+        // Use the new Input System keyboard checks instead of the legacy Input API
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.digit1Key.wasPressedThisFrame)
+            {
+                Time.timeScale = Mathf.Max(0.01f, Time.timeScale - Time.timeScale / 10f);
+            }
+
+            if (Keyboard.current.digit2Key.wasPressedThisFrame)
+            {
+                Time.timeScale = Time.timeScale + Time.timeScale / 10f;
+            }
+        }
     }
 
     void FixedUpdate()

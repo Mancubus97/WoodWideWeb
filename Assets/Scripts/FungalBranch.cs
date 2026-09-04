@@ -36,7 +36,6 @@ namespace WoodWideWeb
         //POINTER
         public List<SoilCell> cell_candidates = new List<SoilCell>();
         public SoilCell destination;
-
         public Soil soil;
         public FungalBranch branchPrefab;
 
@@ -47,15 +46,14 @@ namespace WoodWideWeb
         int width = 4;
         int height = 30;
         int depth = 4;
-        int grow_attempts = 0;
         int branchoff_difficulty = 25;
 
         bool isGrowing = false;
         int maxStock = 5000;
-        int fungal_view_distance = 900;
+        int fungal_view_distance = 300;
         void CreateFirstNode()
         {
-            Soil soil = FindFirstObjectByType<Soil>();
+            Soil soil = FindAnyObjectByType<Soil>();
             BoxCollider col = soil.GetComponent<BoxCollider>();
 
             Vector3 center = col.transform.position;
@@ -69,6 +67,7 @@ namespace WoodWideWeb
             if (nodes.Count == 0)
                 CreateFirstNode();
         }
+
         SoilCell FindTreeCell(FungalNode current)
         {
             if (destination != null && current.position == destination.position)
@@ -76,13 +75,9 @@ namespace WoodWideWeb
                 destination = null;
             }
 
-            if (destination != null)
-            {
-                return destination;
-            }
-
             cell_candidates.Clear();
 
+            // collect candidate cells and remember a destination if we see an ungrown tree
             for (int x = -width; x <= width; x++)
             {
                 for (int y = -height; y < height; y++)
@@ -97,21 +92,74 @@ namespace WoodWideWeb
                         cell_candidates.Add(cell);
 
                         if (cell?.root?.branch != null &&
-                            cell.root.branch.nodes.Count / Constants.rootThickness < Constants.grown_tree_amount)
+                            cell.root.branch.nodes.Count / Constants.rootThickness < Constants.grown_tree_amount
+                            && !trees.Contains(cell.root.branch))
                         {
+                            // remember the location of an ungrown tree but don't jump straight to it
                             destination = cell;
-                            cell_candidates.Clear();
-                            return destination;
+                            trees.Add(cell.root.branch);
+                            // continue scanning so we have a list of nearby candidate steps
                         }
                     }
                 }
             }
 
+            // Build immediate neighbor candidates (allow diagonals) using one-cell step size
+            List<SoilCell> neighbors = new List<SoilCell>();
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    for (int dz = -1; dz <= 1; dz++)
+                    {
+                        if (dx == 0 && dy == 0 && dz == 0)
+                            continue;
+
+                        Vector3 offset = new Vector3(
+                            dx * soil.cellSize.x,
+                            dy * soil.cellSize.y,
+                            dz * soil.cellSize.z
+                        );
+                        SoilCell ncell = Soil.GetSoilCell(current.position + offset);
+                        if (ncell != null && ncell.fungal == null)
+                            neighbors.Add(ncell);
+                    }
+                }
+            }
+
+            // if we have a remembered destination, pick the neighbor that moves toward it
+            if (destination != null)
+            {
+                if (neighbors.Count > 0)
+                {
+                    // prefer neighbors that reduce distance to destination
+                    float currentDist = Vector3.Distance(current.position, destination.position);
+                    var better = neighbors.Where(c => Vector3.Distance(c.position, destination.position) < currentDist).ToList();
+                    if (better.Count > 0)
+                    {
+                        // choose the candidate that gets closest to destination; break ties by direction alignment
+                        Vector3 dirToDest = (destination.position - current.position).normalized;
+                        return better
+                            .OrderBy(c => Vector3.Distance(c.position, destination.position))
+                            .ThenByDescending(c => Vector3.Dot(dirToDest, (c.position - current.position).normalized))
+                            .First();
+                    }
+
+                    // otherwise pick the neighbor that gets closest to destination, prefer those aligned with direction
+                    Vector3 dir = (destination.position - current.position).normalized;
+                    return neighbors
+                        .OrderBy(c => Vector3.Distance(c.position, destination.position))
+                        .ThenByDescending(c => Vector3.Dot(dir, (c.position - current.position).normalized))
+                        .First();
+                }
+                // if no immediate neighbors available, fall through to wider random choice below
+            }
+
 
             // go to random next cell if no tree is found
-            List<SoilCell> validCells = cell_candidates.Where(c => c != null).ToList();
-            if (validCells.Count > 0)
-                return validCells[Random.Range(0, validCells.Count)];
+            var randomCandidates = cell_candidates.Where(c => c != null && c.position != current.position && c.fungal == null).ToList();
+            if (randomCandidates.Count > 0)
+                return randomCandidates[Random.Range(0, randomCandidates.Count)];
 
             return null;
         }
@@ -148,7 +196,7 @@ namespace WoodWideWeb
 
             SoilCell nextCell = null;
 
-            nextCell = trees.Count == 0 ? FindTreeCell(last) : FindHighNutrientCell(last);
+            nextCell = nutrientsStock > maxStock/100f ? FindTreeCell(last) : FindHighNutrientCell(last);
 
             if (nextCell == null)
             {
@@ -172,7 +220,7 @@ namespace WoodWideWeb
 
             nextCell.fungal = new_node;
             nodes.Add(new_node);
-        }
+        } 
 
         float elapsedTime = 0f;
 
@@ -202,7 +250,7 @@ namespace WoodWideWeb
                 // dequeue any fully grown trees
                 foreach (TreeBranch tree in trees)
                 {
-                    if (tree != null && tree.nodes.Count >= Constants.grown_tree_amount)
+                    if (tree.isGrowing && tree != null && tree.nodes.Count >= Constants.grown_tree_amount)
                     {
                         Debug.Log("Tree fully grown!");
                         Constants.score++;
@@ -233,6 +281,14 @@ namespace WoodWideWeb
             else
             {
                 Gizmos.DrawSphere(transform.position, 10);
+            }
+
+            if (destination != null)
+            {
+                Gizmos.color = Color.yellowGreen;
+                Gizmos.DrawSphere(nodes[nodes.Count - 1].position, 10);
+
+                Handles.Label(destination.position, "Destination");
             }
 
             //foreach (SoilCell cell in cell_candidates)

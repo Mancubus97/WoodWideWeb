@@ -75,7 +75,7 @@ namespace WoodWideWeb
 
         void CreateFirstNode()
         {
-            TreeBranch soil = FindFirstObjectByType<TreeBranch>();
+            TreeBranch soil = FindAnyObjectByType<TreeBranch>();
             BoxCollider col = soil.GetComponent<BoxCollider>();
 
             Vector3 center = col.transform.position;

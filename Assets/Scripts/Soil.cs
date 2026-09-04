@@ -35,6 +35,7 @@ namespace WoodWideWeb
         private Renderer rend;
 
         static float falloff = 0.0005f;
+        static int hotspots = 3;
 
         static int xGrid = 100;
         static int yGrid = 50;
@@ -141,7 +142,7 @@ namespace WoodWideWeb
 
         void OnValidate()
         {
-            FillGrid(2);
+            FillGrid(hotspots);
         }
         void Start()
         {
@@ -213,7 +214,7 @@ namespace WoodWideWeb
             if (grid == null)
                 return null;
 
-            Soil inst = FindFirstObjectByType<Soil>();
+            Soil inst = FindAnyObjectByType<Soil>();
             if (inst == null)
                 return null;
 

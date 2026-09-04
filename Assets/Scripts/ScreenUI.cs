@@ -24,6 +24,13 @@ namespace WoodWideWeb
 
         private GUIStyle _style;
 
+
+
+        private void Update()
+        {
+            // Update the display text with the current score
+            displayText = "Score: " + Constants.score;
+        }
         private void OnGUI()
         {
             // Build the style once and cache it
