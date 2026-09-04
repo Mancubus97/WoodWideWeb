@@ -148,7 +148,7 @@ namespace WoodWideWeb
         {
             //rend = GetComponent<Renderer>();
             //if (rend != null)
-            //    rend.enabled = false;
+            //    rend.enabled = false; 
 
 
             Debug.Log("Soil initialized!");
